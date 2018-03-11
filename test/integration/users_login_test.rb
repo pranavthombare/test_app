@@ -6,6 +6,19 @@ class UsersLoginTest < ActionDispatch::IntegrationTest
       @user = users(:michael)
     end
 
+    test "login with remembering" do
+    log_in_as(@user, remember_me: '1')
+    assert_not_empty cookies['remember_token']
+  end
+
+  test "login without remembering" do
+    # Log in to set the cookie.
+    log_in_as(@user, remember_me: '1')
+    # Log in again and verify that the cookie is deleted.
+    log_in_as(@user, remember_me: '0')
+    assert_empty cookies['remember_token']
+  end
+
   test "login with invalid information" do
     get login_path
     assert_template 'sessions/new'
@@ -15,7 +28,6 @@ class UsersLoginTest < ActionDispatch::IntegrationTest
     get root_path
     assert flash.empty?
   end
-
   test "login with valid information followed by logout" do
     get login_path
     post login_path, params: { session: { email:    @user.email,
@@ -37,21 +49,4 @@ class UsersLoginTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", logout_path,      count: 0
     assert_select "a[href=?]", user_path(@user), count: 0
   end
-
-  test "authenticated? should return false for a user with nil digest" do
-    assert_not @user.authenticated?('')
-  end
-
-  test "login with remembering" do
-      log_in_as(@user, remember_me: '1')
-      assert_not_empty cookies['remember_token']
-    end
-
-    test "login without remembering" do
-      # Log in to set the cookie.
-      log_in_as(@user, remember_me: '1')
-      # Log in again and verify that the cookie is deleted.
-      log_in_as(@user, remember_me: '0')
-      assert_empty cookies['remember_token']
-    end
-  end
+end
